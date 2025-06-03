@@ -9,7 +9,7 @@ import java.lang.annotation.Target;
  * RPC服务提供者注解
  * 标记在服务实现类上，表示该类提供RPC服务
  * 
- * @author SS-RPC Team
+ * @author chenzhang
  * @since 1.0.0
  */
 @Target(ElementType.TYPE)

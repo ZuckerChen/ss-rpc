@@ -4,7 +4,7 @@ package com.ssrpc.core.server;
  * RPC服务器接口
  * 定义RPC服务器的基本功能
  * 
- * @author SS-RPC Team
+ * @author chenzhang
  * @since 1.0.0
  */
 public interface RpcServer {

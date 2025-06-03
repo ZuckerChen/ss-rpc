@@ -5,9 +5,9 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * LoadBalanceType枚举测试
+ * 负载均衡类型测试.
  * 
- * @author SS-RPC Team
+ * @author chenzhang
  * @since 1.0.0
  */
 class LoadBalanceTypeTest {

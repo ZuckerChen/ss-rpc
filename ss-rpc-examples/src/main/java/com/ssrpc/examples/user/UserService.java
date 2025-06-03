@@ -5,7 +5,7 @@ import java.util.concurrent.CompletableFuture;
 /**
  * 用户服务接口
  * 
- * @author SS-RPC Team
+ * @author chenzhang
  * @since 1.0.0
  */
 public interface UserService {

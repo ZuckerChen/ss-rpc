@@ -5,9 +5,9 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * RpcService注解测试
+ * RPC服务注解测试.
  * 
- * @author SS-RPC Team
+ * @author chenzhang
  * @since 1.0.0
  */
 class RpcServiceTest {

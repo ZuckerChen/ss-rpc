@@ -3,7 +3,7 @@ package com.ssrpc.core.loadbalance;
 /**
  * 负载均衡类型枚举
  * 
- * @author SS-RPC Team
+ * @author chenzhang
  * @since 1.0.0
  */
 public enum LoadBalanceType {

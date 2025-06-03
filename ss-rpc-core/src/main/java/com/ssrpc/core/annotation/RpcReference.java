@@ -8,10 +8,11 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * RPC服务消费者注解
- * 标记在字段上，表示需要注入远程服务代理
+ * RPC服务引用注解.
  * 
- * @author SS-RPC Team
+ * 标记在字段或setter方法上，表示需要注入RPC服务代理对象
+ * 
+ * @author chenzhang
  * @since 1.0.0
  */
 @Target({ElementType.FIELD, ElementType.PARAMETER})
