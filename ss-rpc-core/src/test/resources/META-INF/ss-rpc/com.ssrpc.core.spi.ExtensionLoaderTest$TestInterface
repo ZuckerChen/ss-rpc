@@ -1,0 +1,2 @@
+test1=com.ssrpc.core.spi.ExtensionLoaderTest$Test1Impl
+test2=com.ssrpc.core.spi.ExtensionLoaderTest$Test2Impl 

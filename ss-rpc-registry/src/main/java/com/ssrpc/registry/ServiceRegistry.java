@@ -1,5 +1,6 @@
 package com.ssrpc.registry;
 
+import com.ssrpc.core.spi.SPI;
 import com.ssrpc.protocol.ServiceInstance;
 
 /**
@@ -11,6 +12,7 @@ import com.ssrpc.protocol.ServiceInstance;
  * @author chenzhang
  * @since 1.0.0
  */
+@SPI("memory")
 public interface ServiceRegistry {
     
     /**
@@ -64,46 +66,21 @@ public interface ServiceRegistry {
     boolean instanceExists(String instanceId) throws RegistryException;
     
     /**
-     * 设置服务实例状态
-     * 
-     * @param instanceId 实例ID
-     * @param status 新状态 (UP/DOWN/UNKNOWN)
-     * @throws RegistryException 服务注册异常
-     */
-    void setInstanceStatus(String instanceId, String status) throws RegistryException;
-    
-    /**
-     * 启动服务注册中心
-     * 
-     * @throws RegistryException 启动异常
-     */
-    void start() throws RegistryException;
-    
-    /**
-     * 停止服务注册中心
-     * 
-     * @throws RegistryException 停止异常
-     */
-    void stop() throws RegistryException;
-    
-    /**
-     * 检查服务注册中心是否已启动
-     * 
-     * @return true表示已启动，false表示未启动
-     */
-    boolean isStarted();
-    
-    /**
      * 获取注册中心类型
      * 
      * @return 注册中心类型
      */
-    String getRegistryType();
+    String getType();
     
     /**
-     * 获取注册中心地址
+     * 检查注册中心是否可用
      * 
-     * @return 注册中心地址
+     * @return true表示可用，false表示不可用
      */
-    String getRegistryAddress();
+    boolean isAvailable();
+    
+    /**
+     * 关闭注册中心连接，释放资源
+     */
+    void close();
 } 

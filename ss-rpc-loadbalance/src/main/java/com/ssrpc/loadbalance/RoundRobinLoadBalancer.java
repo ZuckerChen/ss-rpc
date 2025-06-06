@@ -6,13 +6,11 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 /**
- * 轮询负载均衡器.
+ * 轮询负载均衡器实现.
  * 
- * 按照轮询策略依次选择服务实例
- * 保证每个实例都能被平均分配请求
+ * 按照轮询方式依次选择服务实例，保证请求均匀分布
  * 
  * @author chenzhang
  * @since 1.0.0
@@ -21,7 +19,8 @@ public class RoundRobinLoadBalancer implements LoadBalancer {
     
     private static final Logger log = LoggerFactory.getLogger(RoundRobinLoadBalancer.class);
     
-    private final AtomicInteger currentIndex = new AtomicInteger(0);
+    private final AtomicInteger counter = new AtomicInteger(0);
+    private final LoadBalanceStats stats = new LoadBalanceStats();
     
     @Override
     public ServiceInstance select(List<ServiceInstance> instances) throws LoadBalanceException {
@@ -32,10 +31,10 @@ public class RoundRobinLoadBalancer implements LoadBalancer {
             );
         }
         
-        // 过滤出健康的实例
+        // 过滤健康的实例
         List<ServiceInstance> healthyInstances = instances.stream()
-                .filter(ServiceInstance::isHealthy)
-                .collect(Collectors.toList());
+                .filter(instance -> instance != null && instance.isHealthy())
+                .collect(java.util.stream.Collectors.toList());
         
         if (healthyInstances.isEmpty()) {
             throw new LoadBalanceException(
@@ -44,14 +43,34 @@ public class RoundRobinLoadBalancer implements LoadBalancer {
             );
         }
         
-        // 轮询选择一个实例
-        int index = currentIndex.getAndIncrement() % healthyInstances.size();
+        // 轮询选择
+        int index = getNextIndex(healthyInstances.size());
         ServiceInstance selected = healthyInstances.get(index);
         
-        log.debug("Selected instance {} from {} healthy instances using round-robin strategy (index: {})", 
-                 selected.getInstanceId(), healthyInstances.size(), index);
+        // 记录统计信息
+        stats.recordSelection(selected.getInstanceId());
         
+        log.debug("Round-robin load balancer selected instance: {} (index: {})", 
+                selected.getInstanceId(), index);
         return selected;
+    }
+    
+    /**
+     * 获取下一个索引
+     */
+    private int getNextIndex(int size) {
+        if (size <= 0) {
+            return 0;
+        }
+        
+        int current = counter.getAndIncrement();
+        // 防止整数溢出
+        if (current < 0) {
+            counter.set(0);
+            current = 0;
+        }
+        
+        return current % size;
     }
     
     @Override
@@ -60,16 +79,23 @@ public class RoundRobinLoadBalancer implements LoadBalancer {
     }
     
     @Override
-    public void reset() {
-        currentIndex.set(0);
-        log.debug("Round-robin load balancer index reset");
+    public LoadBalanceStats getStats() {
+        return stats;
     }
     
     @Override
-    public String toString() {
-        return "RoundRobinLoadBalancer{" +
-                "type=" + getType() +
-                ", currentIndex=" + currentIndex.get() +
-                '}';
+    public void reset() {
+        counter.set(0);
+        stats.reset();
+        log.debug("Round-robin load balancer stats reset");
+    }
+    
+    /**
+     * 获取当前计数器值
+     * 
+     * @return 当前计数器值
+     */
+    public int getCurrentCounter() {
+        return counter.get();
     }
 } 

@@ -1,0 +1,3 @@
+random=com.ssrpc.loadbalance.RandomLoadBalancer
+round_robin=com.ssrpc.loadbalance.RoundRobinLoadBalancer
+weighted_round_robin=com.ssrpc.loadbalance.WeightedRoundRobinLoadBalancer 

@@ -6,13 +6,11 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Random;
-import java.util.stream.Collectors;
 
 /**
- * 随机负载均衡器.
+ * 随机负载均衡器实现.
  * 
- * 从可用的服务实例中随机选择一个实例
- * 简单高效，适合大部分场景
+ * 随机选择一个可用的服务实例
  * 
  * @author chenzhang
  * @since 1.0.0
@@ -22,6 +20,7 @@ public class RandomLoadBalancer implements LoadBalancer {
     private static final Logger log = LoggerFactory.getLogger(RandomLoadBalancer.class);
     
     private final Random random = new Random();
+    private final LoadBalanceStats stats = new LoadBalanceStats();
     
     @Override
     public ServiceInstance select(List<ServiceInstance> instances) throws LoadBalanceException {
@@ -32,10 +31,10 @@ public class RandomLoadBalancer implements LoadBalancer {
             );
         }
         
-        // 过滤出健康的实例
+        // 过滤健康的实例
         List<ServiceInstance> healthyInstances = instances.stream()
-                .filter(ServiceInstance::isHealthy)
-                .collect(Collectors.toList());
+                .filter(instance -> instance != null && instance.isHealthy())
+                .collect(java.util.stream.Collectors.toList());
         
         if (healthyInstances.isEmpty()) {
             throw new LoadBalanceException(
@@ -44,13 +43,14 @@ public class RandomLoadBalancer implements LoadBalancer {
             );
         }
         
-        // 随机选择一个实例
+        // 随机选择
         int index = random.nextInt(healthyInstances.size());
         ServiceInstance selected = healthyInstances.get(index);
         
-        log.debug("Selected instance {} from {} healthy instances using random strategy", 
-                 selected.getInstanceId(), healthyInstances.size());
+        // 记录统计信息
+        stats.recordSelection(selected.getInstanceId());
         
+        log.debug("Random load balancer selected instance: {}", selected.getInstanceId());
         return selected;
     }
     
@@ -60,9 +60,13 @@ public class RandomLoadBalancer implements LoadBalancer {
     }
     
     @Override
-    public String toString() {
-        return "RandomLoadBalancer{" +
-                "type=" + getType() +
-                '}';
+    public LoadBalanceStats getStats() {
+        return stats;
+    }
+    
+    @Override
+    public void reset() {
+        stats.reset();
+        log.debug("Random load balancer stats reset");
     }
 } 

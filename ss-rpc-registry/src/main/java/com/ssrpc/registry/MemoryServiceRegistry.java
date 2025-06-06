@@ -247,62 +247,9 @@ public class MemoryServiceRegistry implements ServiceRegistry {
         }
     }
     
-    @Override
-    public void setInstanceStatus(String instanceId, String status) throws RegistryException {
-        if (instanceId == null || instanceId.trim().isEmpty()) {
-            throw new RegistryException(
-                RegistryException.ErrorCodes.CONFIGURATION_ERROR,
-                "Instance ID cannot be null or empty"
-            );
-        }
-        
-        if (status == null) {
-            throw new RegistryException(
-                RegistryException.ErrorCodes.CONFIGURATION_ERROR,
-                "Status cannot be null"
-            );
-        }
-        
-        if (!started.get()) {
-            throw new RegistryException(
-                RegistryException.ErrorCodes.CONFIGURATION_ERROR,
-                "Service registry is not started"
-            );
-        }
-        
-        try {
-            ServiceInstance instance = instances.get(instanceId.trim());
-            if (instance == null) {
-                throw new RegistryException(
-                    RegistryException.ErrorCodes.INSTANCE_NOT_FOUND,
-                    "Service instance not found: " + instanceId
-                );
-            }
-            
-            // 根据状态设置健康状态
-            boolean healthy = "UP".equalsIgnoreCase(status);
-            String oldStatus = instance.isHealthy() ? "UP" : "DOWN";
-            
-            instance.setHealthy(healthy);
-            
-            // 更新实例
-            update(instance);
-            
-            log.info("Updated service instance status: {} from {} to {}", 
-                    instanceId, oldStatus, status);
-            
-        } catch (RegistryException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new RegistryException(
-                RegistryException.ErrorCodes.UNKNOWN_ERROR,
-                "Failed to update service instance status: " + instanceId,
-                e
-            );
-        }
-    }
-    
-    @Override
+    /**
+     * 启动服务注册中心
+     */
     public void start() throws RegistryException {
         if (started.compareAndSet(false, true)) {
             try {
@@ -318,7 +265,9 @@ public class MemoryServiceRegistry implements ServiceRegistry {
         }
     }
     
-    @Override
+    /**
+     * 停止服务注册中心
+     */
     public void stop() throws RegistryException {
         if (started.compareAndSet(true, false)) {
             try {
@@ -335,19 +284,30 @@ public class MemoryServiceRegistry implements ServiceRegistry {
         }
     }
     
-    @Override
+    /**
+     * 检查是否已启动
+     */
     public boolean isStarted() {
         return started.get();
     }
     
     @Override
-    public String getRegistryType() {
+    public String getType() {
         return "memory";
     }
     
     @Override
-    public String getRegistryAddress() {
-        return "memory://local";
+    public boolean isAvailable() {
+        return started.get();
+    }
+    
+    @Override
+    public void close() {
+        try {
+            stop();
+        } catch (RegistryException e) {
+            log.warn("Error occurred while closing registry", e);
+        }
     }
     
     /**
@@ -360,8 +320,7 @@ public class MemoryServiceRegistry implements ServiceRegistry {
     @Override
     public String toString() {
         return "MemoryServiceRegistry{" +
-                "type=" + getRegistryType() +
-                ", address=" + getRegistryAddress() +
+                "type=" + getType() +
                 ", instanceCount=" + instances.size() +
                 ", started=" + started.get() +
                 '}';

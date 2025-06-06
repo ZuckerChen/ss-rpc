@@ -1,5 +1,6 @@
 package com.ssrpc.loadbalance;
 
+import com.ssrpc.core.spi.SPI;
 import com.ssrpc.protocol.ServiceInstance;
 
 import java.util.List;
@@ -13,6 +14,7 @@ import java.util.List;
  * @author chenzhang
  * @since 1.0.0
  */
+@SPI("round_robin")
 public interface LoadBalancer {
     
     /**
@@ -72,79 +74,17 @@ public interface LoadBalancer {
      * 
      * @return 负载均衡统计信息
      */
-    default LoadBalanceStatistics getStatistics() {
-        return new LoadBalanceStatistics();
+    default LoadBalanceStats getStats() {
+        return new LoadBalanceStats();
     }
     
     /**
-     * 负载均衡统计信息
+     * 检查是否支持指定的服务实例
+     * 
+     * @param instance 服务实例
+     * @return true表示支持，false表示不支持
      */
-    class LoadBalanceStatistics {
-        /** 总选择次数 */
-        private long totalSelections = 0;
-        
-        /** 实例选择次数统计 */
-        private java.util.Map<String, Long> instanceSelections = new java.util.concurrent.ConcurrentHashMap<>();
-        
-        /** 最后选择时间 */
-        private long lastSelectTime = 0;
-        
-        public long getTotalSelections() {
-            return totalSelections;
-        }
-        
-        public void setTotalSelections(long totalSelections) {
-            this.totalSelections = totalSelections;
-        }
-        
-        public java.util.Map<String, Long> getInstanceSelections() {
-            return instanceSelections;
-        }
-        
-        public void setInstanceSelections(java.util.Map<String, Long> instanceSelections) {
-            this.instanceSelections = instanceSelections;
-        }
-        
-        public long getLastSelectTime() {
-            return lastSelectTime;
-        }
-        
-        public void setLastSelectTime(long lastSelectTime) {
-            this.lastSelectTime = lastSelectTime;
-        }
-        
-        /**
-         * 记录一次选择
-         */
-        public void recordSelection(String instanceId) {
-            totalSelections++;
-            instanceSelections.merge(instanceId, 1L, Long::sum);
-            lastSelectTime = System.currentTimeMillis();
-        }
-        
-        /**
-         * 获取实例选择次数
-         */
-        public long getInstanceSelectionCount(String instanceId) {
-            return instanceSelections.getOrDefault(instanceId, 0L);
-        }
-        
-        /**
-         * 重置统计信息
-         */
-        public void reset() {
-            totalSelections = 0;
-            instanceSelections.clear();
-            lastSelectTime = 0;
-        }
-        
-        @Override
-        public String toString() {
-            return "LoadBalanceStatistics{" +
-                    "totalSelections=" + totalSelections +
-                    ", instanceCount=" + instanceSelections.size() +
-                    ", lastSelectTime=" + lastSelectTime +
-                    '}';
-        }
+    default boolean supports(ServiceInstance instance) {
+        return instance != null && instance.isHealthy();
     }
 } 

@@ -20,6 +20,10 @@
         <!-- 内部依赖 -->
         <dependency>
             <groupId>com.ssrpc</groupId>
+            <artifactId>ss-rpc-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.ssrpc</groupId>
             <artifactId>ss-rpc-protocol</artifactId>
         </dependency>
 

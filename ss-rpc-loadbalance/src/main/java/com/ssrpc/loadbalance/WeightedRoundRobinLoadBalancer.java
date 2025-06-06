@@ -6,14 +6,12 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
+import java.util.concurrent.ConcurrentMap;
 
 /**
- * 加权轮询负载均衡器.
+ * 加权轮询负载均衡器实现.
  * 
- * 根据服务实例的权重进行轮询选择，权重越高的实例被选中的概率越大
- * 适合服务实例性能差异较大的场景
+ * 根据服务实例的权重进行轮询选择，权重越高被选中的概率越大
  * 
  * @author chenzhang
  * @since 1.0.0
@@ -23,35 +21,12 @@ public class WeightedRoundRobinLoadBalancer implements LoadBalancer {
     private static final Logger log = LoggerFactory.getLogger(WeightedRoundRobinLoadBalancer.class);
     
     /**
-     * 实例权重信息
+     * 实例当前权重缓存
+     * key: instanceId, value: current weight
      */
-    private static class WeightInfo {
-        private final int weight;          // 实例权重
-        private final AtomicInteger current;   // 当前权重值
-        
-        public WeightInfo(int weight) {
-            this.weight = weight;
-            this.current = new AtomicInteger(0);
-        }
-        
-        public int getWeight() {
-            return weight;
-        }
-        
-        public int getCurrentWeight() {
-            return current.get();
-        }
-        
-        public int addAndGet(int delta) {
-            return current.addAndGet(delta);
-        }
-        
-        public void set(int value) {
-            current.set(value);
-        }
-    }
+    private final ConcurrentMap<String, Integer> currentWeights = new ConcurrentHashMap<>();
     
-    private final ConcurrentHashMap<String, WeightInfo> weightMap = new ConcurrentHashMap<>();
+    private final LoadBalanceStats stats = new LoadBalanceStats();
     
     @Override
     public ServiceInstance select(List<ServiceInstance> instances) throws LoadBalanceException {
@@ -62,10 +37,10 @@ public class WeightedRoundRobinLoadBalancer implements LoadBalancer {
             );
         }
         
-        // 过滤出健康的实例
+        // 过滤健康的实例
         List<ServiceInstance> healthyInstances = instances.stream()
-                .filter(ServiceInstance::isHealthy)
-                .collect(Collectors.toList());
+                .filter(instance -> instance != null && instance.isHealthy())
+                .collect(java.util.stream.Collectors.toList());
         
         if (healthyInstances.isEmpty()) {
             throw new LoadBalanceException(
@@ -74,75 +49,59 @@ public class WeightedRoundRobinLoadBalancer implements LoadBalancer {
             );
         }
         
-        // 如果只有一个实例，直接返回
-        if (healthyInstances.size() == 1) {
-            ServiceInstance selected = healthyInstances.get(0);
-            return selected;
-        }
-        
-        // 使用加权轮询算法选择实例
         ServiceInstance selected = selectByWeight(healthyInstances);
         
-        log.debug("Selected instance {} with weight {} from {} healthy instances using weighted round-robin strategy", 
-                 selected.getInstanceId(), selected.getWeight(), healthyInstances.size());
+        // 记录统计信息
+        stats.recordSelection(selected.getInstanceId());
         
+        log.debug("Weighted round-robin load balancer selected instance: {} (weight: {})", 
+                selected.getInstanceId(), selected.getWeight());
         return selected;
     }
     
     /**
-     * 加权轮询选择算法
-     * 使用平滑加权轮询算法（Smooth Weighted Round Robin）
+     * 基于权重选择实例
      */
     private ServiceInstance selectByWeight(List<ServiceInstance> instances) {
-        // 计算总权重
         int totalWeight = 0;
-        ServiceInstance maxWeightInstance = null;
+        ServiceInstance maxCurrentWeightInstance = null;
         int maxCurrentWeight = Integer.MIN_VALUE;
         
+        // 计算总权重并找到当前权重最大的实例
         for (ServiceInstance instance : instances) {
             String instanceId = instance.getInstanceId();
-            int weight = instance.getWeight();
+            int weight = Math.max(instance.getWeight(), 1); // 确保权重至少为1
             
-            // 确保权重为正数
-            if (weight <= 0) {
-                weight = 1;
+            // 获取当前权重
+            Integer currentWeight = currentWeights.get(instanceId);
+            if (currentWeight == null) {
+                currentWeight = 0;
             }
-            
-            // 获取或创建权重信息
-            int finalWeight = weight;
-            WeightInfo weightInfo = weightMap.computeIfAbsent(instanceId, k -> new WeightInfo(finalWeight));
-            
-            // 更新权重信息（如果实例权重发生变化）
-            if (weightInfo.getWeight() != weight) {
-                weightMap.put(instanceId, new WeightInfo(weight));
-                weightInfo = weightMap.get(instanceId);
-            }
-            
-            totalWeight += weight;
             
             // 增加当前权重
-            int currentWeight = weightInfo.addAndGet(weight);
+            currentWeight += weight;
+            currentWeights.put(instanceId, currentWeight);
+            
+            totalWeight += weight;
             
             // 找到当前权重最大的实例
             if (currentWeight > maxCurrentWeight) {
                 maxCurrentWeight = currentWeight;
-                maxWeightInstance = instance;
+                maxCurrentWeightInstance = instance;
             }
         }
         
-        if (maxWeightInstance == null) {
-            // 防御性编程，理论上不会到达这里
+        if (maxCurrentWeightInstance == null) {
+            // 这种情况不应该发生，但为了安全起见
             return instances.get(0);
         }
         
-        // 将选中实例的当前权重减去总权重
-        String selectedInstanceId = maxWeightInstance.getInstanceId();
-        WeightInfo selectedWeightInfo = weightMap.get(selectedInstanceId);
-        if (selectedWeightInfo != null) {
-            selectedWeightInfo.addAndGet(-totalWeight);
-        }
+        // 减少选中实例的当前权重
+        String selectedInstanceId = maxCurrentWeightInstance.getInstanceId();
+        int newCurrentWeight = maxCurrentWeight - totalWeight;
+        currentWeights.put(selectedInstanceId, newCurrentWeight);
         
-        return maxWeightInstance;
+        return maxCurrentWeightInstance;
     }
     
     @Override
@@ -151,64 +110,38 @@ public class WeightedRoundRobinLoadBalancer implements LoadBalancer {
     }
     
     @Override
-    public void reset() {
-        weightMap.clear();
-        log.debug("Weighted round-robin load balancer reset");
-    }
-    
-    /**
-     * 更新实例权重
-     */
-    public void updateWeight(String instanceId, int weight) {
-        if (weight <= 0) {
-            throw new LoadBalanceException(
-                LoadBalanceException.ErrorCodes.INVALID_WEIGHT,
-                "Weight must be positive: " + weight
-            );
-        }
-        
-        weightMap.compute(instanceId, (key, oldWeightInfo) -> {
-            if (oldWeightInfo == null) {
-                return new WeightInfo(weight);
-            } else {
-                // 保持当前权重值，只更新基础权重
-                WeightInfo newWeightInfo = new WeightInfo(weight);
-                newWeightInfo.set(oldWeightInfo.getCurrentWeight());
-                return newWeightInfo;
-            }
-        });
-        
-        log.debug("Updated weight for instance {} to {}", instanceId, weight);
-    }
-    
-    /**
-     * 获取实例权重
-     */
-    public int getWeight(String instanceId) {
-        WeightInfo weightInfo = weightMap.get(instanceId);
-        return weightInfo != null ? weightInfo.getWeight() : -1;
-    }
-    
-    /**
-     * 获取所有实例的权重信息
-     */
-    public java.util.Map<String, String> getWeightInfos() {
-        return weightMap.entrySet().stream()
-                .collect(java.util.stream.Collectors.toMap(
-                    java.util.Map.Entry::getKey,
-                    entry -> {
-                        WeightInfo info = entry.getValue();
-                        return String.format("weight=%d, current=%d", 
-                               info.getWeight(), info.getCurrentWeight());
-                    }
-                ));
+    public LoadBalanceStats getStats() {
+        return stats;
     }
     
     @Override
-    public String toString() {
-        return "WeightedRoundRobinLoadBalancer{" +
-                "type=" + getType() +
-                ", instanceCount=" + weightMap.size() +
-                '}';
+    public void reset() {
+        currentWeights.clear();
+        stats.reset();
+        log.debug("Weighted round-robin load balancer stats reset");
+    }
+    
+    @Override
+    public void updateWeight(String instanceId, int weight) {
+        if (instanceId != null && weight > 0) {
+            // 重置当前权重，让新权重生效
+            currentWeights.remove(instanceId);
+            log.debug("Updated weight for instance {}: {}", instanceId, weight);
+        }
+    }
+    
+    @Override
+    public int getWeight(String instanceId) {
+        // 从实例本身获取权重，这里返回当前权重
+        return currentWeights.getOrDefault(instanceId, 0);
+    }
+    
+    /**
+     * 获取所有实例的当前权重
+     * 
+     * @return 实例当前权重映射
+     */
+    public ConcurrentMap<String, Integer> getCurrentWeights() {
+        return new ConcurrentHashMap<>(currentWeights);
     }
 } 

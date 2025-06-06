@@ -1,14 +1,16 @@
 package com.ssrpc.loadbalance;
 
+import com.ssrpc.core.spi.ExtensionLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 负载均衡器工厂.
  * 
- * 负责创建和管理不同类型的负载均衡器实例
+ * 基于SPI机制创建和管理不同类型的负载均衡器实例
  * 支持负载均衡器复用和单例模式
  * 
  * @author chenzhang
@@ -22,8 +24,14 @@ public class LoadBalancerFactory {
      * 负载均衡器实例缓存
      * key: LoadBalanceType, value: LoadBalancer实例
      */
-    private static final ConcurrentHashMap<LoadBalanceType, LoadBalancer> LOAD_BALANCER_CACHE = 
+    private static final ConcurrentHashMap<String, LoadBalancer> LOAD_BALANCER_CACHE = 
             new ConcurrentHashMap<>();
+    
+    /**
+     * SPI扩展加载器
+     */
+    private static final ExtensionLoader<LoadBalancer> EXTENSION_LOADER = 
+            ExtensionLoader.getExtensionLoader(LoadBalancer.class);
     
     /**
      * 私有构造方法，防止实例化
@@ -45,25 +53,7 @@ public class LoadBalancerFactory {
             );
         }
         
-        return LOAD_BALANCER_CACHE.computeIfAbsent(type, LoadBalancerFactory::createLoadBalancer);
-    }
-    
-    /**
-     * 创建新的负载均衡器实例
-     * 
-     * @param type 负载均衡类型
-     * @return 负载均衡器实例
-     * @throws LoadBalanceException 如果不支持该类型的负载均衡器
-     */
-    public static LoadBalancer createNewLoadBalancer(LoadBalanceType type) throws LoadBalanceException {
-        if (type == null) {
-            throw new LoadBalanceException(
-                LoadBalanceException.ErrorCodes.INVALID_STRATEGY,
-                "Load balance type cannot be null"
-            );
-        }
-        
-        return createLoadBalancer(type);
+        return getLoadBalancer(type.getCode());
     }
     
     /**
@@ -81,100 +71,87 @@ public class LoadBalancerFactory {
             );
         }
         
-        try {
-            LoadBalanceType type = LoadBalanceType.fromCode(typeCode.trim());
-            return getLoadBalancer(type);
-        } catch (IllegalArgumentException e) {
+        return LOAD_BALANCER_CACHE.computeIfAbsent(typeCode, LoadBalancerFactory::createLoadBalancer);
+    }
+    
+    /**
+     * 创建新的负载均衡器实例
+     * 
+     * @param typeCode 负载均衡类型代码
+     * @return 负载均衡器实例
+     * @throws LoadBalanceException 如果不支持该类型的负载均衡器
+     */
+    public static LoadBalancer createNewLoadBalancer(String typeCode) throws LoadBalanceException {
+        if (typeCode == null || typeCode.trim().isEmpty()) {
             throw new LoadBalanceException(
                 LoadBalanceException.ErrorCodes.INVALID_STRATEGY,
-                "Unsupported load balance type: " + typeCode,
+                "Load balance type code cannot be null or empty"
+            );
+        }
+        
+        return createLoadBalancer(typeCode);
+    }
+    
+    /**
+     * 实际创建负载均衡器的方法
+     */
+    private static LoadBalancer createLoadBalancer(String typeCode) {
+        try {
+            if (!EXTENSION_LOADER.hasExtension(typeCode)) {
+                throw new LoadBalanceException(
+                    LoadBalanceException.ErrorCodes.INVALID_STRATEGY,
+                    "Unsupported load balance type: " + typeCode
+                );
+            }
+            
+            LoadBalancer loadBalancer = EXTENSION_LOADER.getExtension(typeCode);
+            log.info("Created load balancer: {} ({})", typeCode, loadBalancer.getClass().getSimpleName());
+            return loadBalancer;
+            
+        } catch (Exception e) {
+            throw new LoadBalanceException(
+                LoadBalanceException.ErrorCodes.INVALID_STRATEGY,
+                "Failed to create load balancer for type: " + typeCode,
                 e
             );
         }
     }
     
     /**
-     * 实际创建负载均衡器的方法
+     * 获取默认负载均衡器
+     * 
+     * @return 默认负载均衡器实例
      */
-    private static LoadBalancer createLoadBalancer(LoadBalanceType type) {
-        switch (type) {
-            case RANDOM:
-                return new RandomLoadBalancer();
-                
-            case ROUND_ROBIN:
-                return new RoundRobinLoadBalancer();
-                
-            case WEIGHTED_ROUND_ROBIN:
-                return new WeightedRoundRobinLoadBalancer();
-                
-            case CONSISTENT_HASH:
-                // TODO: 实现一致性哈希负载均衡器
-                throw new LoadBalanceException(
-                    LoadBalanceException.ErrorCodes.INVALID_STRATEGY,
-                    "Consistent hash load balancer not implemented yet"
-                );
-                
-            case LEAST_ACTIVE:
-                // TODO: 实现最少活跃数负载均衡器
-                throw new LoadBalanceException(
-                    LoadBalanceException.ErrorCodes.INVALID_STRATEGY,
-                    "Least active load balancer not implemented yet"
-                );
-                
-            case ADAPTIVE:
-                // TODO: 实现自适应负载均衡器
-                throw new LoadBalanceException(
-                    LoadBalanceException.ErrorCodes.INVALID_STRATEGY,
-                    "Adaptive load balancer not implemented yet"
-                );
-                
-            default:
-                throw new LoadBalanceException(
-                    LoadBalanceException.ErrorCodes.INVALID_STRATEGY,
-                    "Unsupported load balance type: " + type
-                );
+    public static LoadBalancer getDefaultLoadBalancer() {
+        try {
+            return EXTENSION_LOADER.getDefaultExtension();
+        } catch (Exception e) {
+            log.warn("Failed to get default load balancer, fallback to round_robin", e);
+            return getLoadBalancer("round_robin");
         }
     }
     
     /**
      * 检查是否支持指定的负载均衡类型
      * 
-     * @param type 负载均衡类型
+     * @param typeCode 负载均衡类型代码
      * @return true表示支持，false表示不支持
      */
-    public static boolean isSupported(LoadBalanceType type) {
-        if (type == null) {
+    public static boolean isSupported(String typeCode) {
+        if (typeCode == null || typeCode.trim().isEmpty()) {
             return false;
         }
         
-        switch (type) {
-            case RANDOM:
-            case ROUND_ROBIN:
-            case WEIGHTED_ROUND_ROBIN:
-                return true;
-                
-            case CONSISTENT_HASH:
-            case LEAST_ACTIVE:
-            case ADAPTIVE:
-                // TODO: 这些类型暂未实现
-                return false;
-                
-            default:
-                return false;
-        }
+        return EXTENSION_LOADER.hasExtension(typeCode);
     }
     
     /**
      * 获取所有支持的负载均衡类型
      * 
-     * @return 支持的负载均衡类型数组
+     * @return 支持的负载均衡类型集合
      */
-    public static LoadBalanceType[] getSupportedTypes() {
-        return new LoadBalanceType[] {
-            LoadBalanceType.RANDOM,
-            LoadBalanceType.ROUND_ROBIN,
-            LoadBalanceType.WEIGHTED_ROUND_ROBIN
-        };
+    public static Set<String> getSupportedTypes() {
+        return EXTENSION_LOADER.getSupportedExtensions();
     }
     
     /**
@@ -198,13 +175,13 @@ public class LoadBalancerFactory {
     /**
      * 重置指定类型的负载均衡器
      * 
-     * @param type 负载均衡类型
+     * @param typeCode 负载均衡类型代码
      */
-    public static void resetLoadBalancer(LoadBalanceType type) {
-        LoadBalancer loadBalancer = LOAD_BALANCER_CACHE.get(type);
+    public static void resetLoadBalancer(String typeCode) {
+        LoadBalancer loadBalancer = LOAD_BALANCER_CACHE.get(typeCode);
         if (loadBalancer != null) {
             loadBalancer.reset();
-            log.debug("Reset load balancer for type: {}", type);
+            log.debug("Reset load balancer for type: {}", typeCode);
         }
     }
     
