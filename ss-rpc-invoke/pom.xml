@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
+         http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.ssrpc</groupId>
+        <artifactId>ss-rpc</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>ss-rpc-invoke</artifactId>
+    <name>SS-RPC Invoke</name>
+    <description>Service invocation layer for SS-RPC framework</description>
+
+    <dependencies>
+        <!-- SS-RPC Core -->
+        <dependency>
+            <groupId>com.ssrpc</groupId>
+            <artifactId>ss-rpc-core</artifactId>
+        </dependency>
+
+        <!-- SS-RPC Transport -->
+        <dependency>
+            <groupId>com.ssrpc</groupId>
+            <artifactId>ss-rpc-transport</artifactId>
+        </dependency>
+
+        <!-- SS-RPC Registry -->
+        <dependency>
+            <groupId>com.ssrpc</groupId>
+            <artifactId>ss-rpc-registry</artifactId>
+        </dependency>
+
+        <!-- SS-RPC LoadBalance -->
+        <dependency>
+            <groupId>com.ssrpc</groupId>
+            <artifactId>ss-rpc-loadbalance</artifactId>
+        </dependency>
+
+        <!-- Logging -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+
+        <!-- Lombok -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Test -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project> 

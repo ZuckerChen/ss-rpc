@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
+         http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.ssrpc</groupId>
+        <artifactId>ss-rpc</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>ss-rpc-test</artifactId>
+    <name>SS-RPC Test</name>
+    <description>Comprehensive test module for SS-RPC framework</description>
+
+    <dependencies>
+        <!-- SS-RPC Core -->
+        <dependency>
+            <groupId>com.ssrpc</groupId>
+            <artifactId>ss-rpc-core</artifactId>
+        </dependency>
+
+        <!-- SS-RPC Transport -->
+        <dependency>
+            <groupId>com.ssrpc</groupId>
+            <artifactId>ss-rpc-transport</artifactId>
+        </dependency>
+
+        <!-- SS-RPC Protocol -->
+        <dependency>
+            <groupId>com.ssrpc</groupId>
+            <artifactId>ss-rpc-protocol</artifactId>
+        </dependency>
+
+        <!-- SS-RPC Registry -->
+        <dependency>
+            <groupId>com.ssrpc</groupId>
+            <artifactId>ss-rpc-registry</artifactId>
+        </dependency>
+
+        <!-- SS-RPC Serialization -->
+        <dependency>
+            <groupId>com.ssrpc</groupId>
+            <artifactId>ss-rpc-serialization</artifactId>
+        </dependency>
+
+        <!-- SS-RPC LoadBalance -->
+        <dependency>
+            <groupId>com.ssrpc</groupId>
+            <artifactId>ss-rpc-loadbalance</artifactId>
+        </dependency>
+
+        <!-- SS-RPC Invoke -->
+        <dependency>
+            <groupId>com.ssrpc</groupId>
+            <artifactId>ss-rpc-invoke</artifactId>
+        </dependency>
+
+        <!-- Test Dependencies -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Logging for Tests -->
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Lombok -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+            </plugin>
+            
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <includes>
+                        <include>**/*Test.java</include>
+                        <include>**/*Tests.java</include>
+                    </includes>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project> 
