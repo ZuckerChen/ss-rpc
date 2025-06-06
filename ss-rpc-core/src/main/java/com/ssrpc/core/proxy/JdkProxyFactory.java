@@ -4,7 +4,8 @@ import com.ssrpc.core.exception.RpcException;
 import com.ssrpc.core.rpc.RpcInvoker;
 import com.ssrpc.core.rpc.RpcRequest;
 import com.ssrpc.core.rpc.RpcResponse;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -19,8 +20,9 @@ import java.util.concurrent.CompletableFuture;
  * @author chenzhang
  * @since 1.0.0
  */
-@Slf4j
 public class JdkProxyFactory implements ProxyFactory {
+    
+    private static final Logger log = LoggerFactory.getLogger(JdkProxyFactory.class);
     
     @Override
     public <T> T createProxy(Class<T> serviceInterface, RpcInvoker invoker) {
@@ -124,7 +126,13 @@ public class JdkProxyFactory implements ProxyFactory {
             Object[] parameters = args;
             
             // 创建请求
-            RpcRequest request = new RpcRequest(serviceName, methodName, parameterTypes, parameters);
+            RpcRequest request = new RpcRequest();
+            request.setInterfaceName(serviceName);
+            request.setMethodName(methodName);
+            request.setParameterTypes(parameterTypes);
+            request.setParameters(parameters);
+            request.setVersion("1.0.0");
+            request.setTimeout(5000L);
             
             log.debug("Built RPC request: {} for method: {}.{}", 
                 request.getRequestId(), serviceName, methodName);
@@ -141,14 +149,10 @@ public class JdkProxyFactory implements ProxyFactory {
             }
             
             if (!response.isSuccess()) {
-                if (response.getException() != null) {
-                    if (response.getException() instanceof RuntimeException) {
-                        throw (RuntimeException) response.getException();
-                    } else {
-                        throw new RpcException("RPC call failed", response.getException());
-                    }
+                if (response.getErrorMessage() != null) {
+                    throw new RpcException("RPC call failed: " + response.getErrorMessage());
                 } else {
-                    throw new RpcException("RPC call failed: " + response.getStatusMessage());
+                    throw new RpcException("RPC call failed with unknown error");
                 }
             }
             

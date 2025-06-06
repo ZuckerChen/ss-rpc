@@ -16,6 +16,12 @@
     <description>SS-RPC核心功能模块</description>
 
     <dependencies>
+        <!-- SS-RPC Protocol -->
+        <dependency>
+            <groupId>com.ssrpc</groupId>
+            <artifactId>ss-rpc-protocol</artifactId>
+        </dependency>
+        
         <!-- Netty网络通信 -->
         <dependency>
             <groupId>io.netty</groupId>

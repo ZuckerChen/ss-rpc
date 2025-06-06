@@ -1,182 +1,168 @@
 package com.ssrpc.core.rpc;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
 /**
  * RPC请求对象.
  * 
- * 封装了RPC调用所需的所有信息，包括服务名、方法名、参数、版本等
+ * 包含调用远程服务所需的完整信息
  * 
  * @author chenzhang
  * @since 1.0.0
  */
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class RpcRequest implements Serializable {
     
     private static final long serialVersionUID = 1L;
     
     /**
-     * 请求唯一标识，用于异步调用时匹配请求和响应
+     * 请求ID，用于标识唯一请求
      */
     private String requestId;
     
     /**
-     * 服务接口名称（通常是接口的全限定名）
+     * 接口名称
      */
-    private String serviceName;
+    private String interfaceName;
     
     /**
-     * 调用的方法名称
+     * 方法名称
      */
     private String methodName;
     
     /**
-     * 方法参数类型数组
+     * 参数类型数组
      */
     private Class<?>[] parameterTypes;
     
     /**
-     * 方法参数值数组
+     * 参数值数组
      */
     private Object[] parameters;
     
     /**
-     * 服务版本，用于服务版本控制
+     * 客户端版本
      */
-    private String version = "1.0.0";
+    private String version;
     
     /**
-     * 请求超时时间（毫秒）
+     * 超时时间（毫秒）
      */
-    private long timeout = 5000L;
+    private long timeout;
     
     /**
-     * 请求创建时间（毫秒时间戳）
+     * 是否为心跳请求
      */
-    private long createTime;
+    private boolean heartbeat = false;
     
     /**
-     * 请求附件，用于传递额外的上下文信息
+     * 无参构造器
      */
-    private Map<String, String> attachments;
+    public RpcRequest() {
+        this.requestId = UUID.randomUUID().toString();
+    }
     
     /**
-     * 客户端地址信息
+     * 全参构造器
      */
-    private String clientAddress;
-    
-    /**
-     * 是否为单向调用（不需要响应）
-     */
-    private boolean oneWay = false;
-    
-    /**
-     * 请求类型：0-普通请求，1-心跳请求
-     */
-    private byte requestType = 0;
-    
-    /**
-     * 构造方法：创建普通RPC请求
-     */
-    public RpcRequest(String serviceName, String methodName, 
-                     Class<?>[] parameterTypes, Object[] parameters) {
-        this.requestId = generateRequestId();
-        this.serviceName = serviceName;
+    public RpcRequest(String requestId, String interfaceName, String methodName, 
+                     Class<?>[] parameterTypes, Object[] parameters, String version, long timeout) {
+        this.requestId = requestId;
+        this.interfaceName = interfaceName;
         this.methodName = methodName;
         this.parameterTypes = parameterTypes;
         this.parameters = parameters;
-        this.createTime = System.currentTimeMillis();
-        this.attachments = new HashMap<>();
+        this.version = version;
+        this.timeout = timeout;
     }
     
-    /**
-     * 构造方法：创建带版本的RPC请求
-     */
-    public RpcRequest(String serviceName, String methodName, 
-                     Class<?>[] parameterTypes, Object[] parameters, String version) {
-        this(serviceName, methodName, parameterTypes, parameters);
+    // Getter and Setter methods
+    public String getRequestId() {
+        return requestId;
+    }
+    
+    public void setRequestId(String requestId) {
+        this.requestId = requestId;
+    }
+    
+    public String getInterfaceName() {
+        return interfaceName;
+    }
+    
+    public void setInterfaceName(String interfaceName) {
+        this.interfaceName = interfaceName;
+    }
+    
+    public String getMethodName() {
+        return methodName;
+    }
+    
+    public void setMethodName(String methodName) {
+        this.methodName = methodName;
+    }
+    
+    public Class<?>[] getParameterTypes() {
+        return parameterTypes;
+    }
+    
+    public void setParameterTypes(Class<?>[] parameterTypes) {
+        this.parameterTypes = parameterTypes;
+    }
+    
+    public Object[] getParameters() {
+        return parameters;
+    }
+    
+    public void setParameters(Object[] parameters) {
+        this.parameters = parameters;
+    }
+    
+    public String getVersion() {
+        return version;
+    }
+    
+    public void setVersion(String version) {
         this.version = version;
     }
     
-    /**
-     * 生成唯一请求ID
-     */
-    private String generateRequestId() {
-        return UUID.randomUUID().toString().replace("-", "");
+    public long getTimeout() {
+        return timeout;
     }
     
-    /**
-     * 添加附件信息
-     */
-    public RpcRequest addAttachment(String key, String value) {
-        if (this.attachments == null) {
-            this.attachments = new HashMap<>();
-        }
-        this.attachments.put(key, value);
-        return this;
+    public void setTimeout(long timeout) {
+        this.timeout = timeout;
     }
     
-    /**
-     * 获取附件信息
-     */
-    public String getAttachment(String key) {
-        return this.attachments != null ? this.attachments.get(key) : null;
-    }
-    
-    /**
-     * 检查是否为心跳请求
-     */
     public boolean isHeartbeat() {
-        return this.requestType == 1;
+        return heartbeat;
+    }
+    
+    public void setHeartbeat(boolean heartbeat) {
+        this.heartbeat = heartbeat;
     }
     
     /**
      * 设置为心跳请求
      */
     public RpcRequest setAsHeartbeat() {
-        this.requestType = 1;
-        this.serviceName = "HeartbeatService";
+        this.heartbeat = true;
+        this.interfaceName = "HEARTBEAT";
         this.methodName = "ping";
-        if (this.requestId == null || this.requestId.isEmpty()) {
-            this.requestId = generateRequestId();
-        }
-        this.createTime = System.currentTimeMillis();
+        this.parameterTypes = new Class[0];
+        this.parameters = new Object[0];
+        this.version = "1.0.0";
         return this;
-    }
-    
-    /**
-     * 检查请求是否超时
-     */
-    public boolean isTimeout() {
-        return System.currentTimeMillis() - createTime > timeout;
-    }
-    
-    /**
-     * 获取服务的唯一标识（服务名 + 版本）
-     */
-    public String getServiceKey() {
-        return serviceName + ":" + version;
     }
     
     @Override
     public String toString() {
         return "RpcRequest{" +
                 "requestId='" + requestId + '\'' +
-                ", serviceName='" + serviceName + '\'' +
+                ", interfaceName='" + interfaceName + '\'' +
                 ", methodName='" + methodName + '\'' +
                 ", version='" + version + '\'' +
                 ", timeout=" + timeout +
-                ", oneWay=" + oneWay +
-                ", requestType=" + requestType +
+                ", heartbeat=" + heartbeat +
                 '}';
     }
 } 

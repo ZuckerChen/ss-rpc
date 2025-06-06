@@ -1,7 +1,5 @@
 package com.ssrpc.core.annotation;
 
-import com.ssrpc.core.loadbalance.LoadBalanceType;
-
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -42,7 +40,7 @@ public @interface RpcReference {
     /**
      * 负载均衡策略
      */
-    LoadBalanceType loadBalance() default LoadBalanceType.RANDOM;
+    String loadBalance() default "random";
     
     /**
      * 是否异步调用

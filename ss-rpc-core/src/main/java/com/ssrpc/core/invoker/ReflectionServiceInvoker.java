@@ -1,7 +1,8 @@
 package com.ssrpc.core.invoker;
 
 import com.ssrpc.core.exception.RpcException;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -16,8 +17,9 @@ import java.util.concurrent.CompletableFuture;
  * @author chenzhang
  * @since 1.0.0
  */
-@Slf4j
 public class ReflectionServiceInvoker implements ServiceInvoker {
+    
+    private static final Logger log = LoggerFactory.getLogger(ReflectionServiceInvoker.class);
     
     private final Class<?> serviceType;
     private final Object serviceInstance;

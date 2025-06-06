@@ -2,7 +2,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
-         http://maven.apache.org/xsd/maven-4.0.0.xsd">
+                             http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
@@ -12,14 +12,15 @@
     </parent>
 
     <artifactId>ss-rpc-loadbalance</artifactId>
-    <name>SS-RPC LoadBalance</name>
-    <description>SS-RPC负载均衡模块</description>
+    <packaging>jar</packaging>
+    <name>ss-rpc-loadbalance</name>
+    <description>Load Balance Algorithms</description>
 
     <dependencies>
         <!-- 内部依赖 -->
         <dependency>
             <groupId>com.ssrpc</groupId>
-            <artifactId>ss-rpc-core</artifactId>
+            <artifactId>ss-rpc-protocol</artifactId>
         </dependency>
 
         <!-- 日志相关 -->
@@ -42,4 +43,13 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
 </project> 

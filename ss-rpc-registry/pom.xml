@@ -2,7 +2,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
-         http://maven.apache.org/xsd/maven-4.0.0.xsd">
+                             http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
@@ -12,28 +12,15 @@
     </parent>
 
     <artifactId>ss-rpc-registry</artifactId>
-    <name>SS-RPC Registry</name>
-    <description>SS-RPC注册中心模块</description>
+    <packaging>jar</packaging>
+    <name>ss-rpc-registry</name>
+    <description>Service Registry and Discovery</description>
 
     <dependencies>
         <!-- 内部依赖 -->
         <dependency>
             <groupId>com.ssrpc</groupId>
-            <artifactId>ss-rpc-core</artifactId>
-        </dependency>
-
-        <!-- ZooKeeper注册中心 -->
-        <dependency>
-            <groupId>org.apache.zookeeper</groupId>
-            <artifactId>zookeeper</artifactId>
-            <optional>true</optional>
-        </dependency>
-
-        <!-- Nacos注册中心 -->
-        <dependency>
-            <groupId>com.alibaba.nacos</groupId>
-            <artifactId>nacos-client</artifactId>
-            <optional>true</optional>
+            <artifactId>ss-rpc-protocol</artifactId>
         </dependency>
 
         <!-- 日志相关 -->
@@ -42,11 +29,16 @@
             <artifactId>slf4j-api</artifactId>
         </dependency>
 
-        <!-- 工具类 -->
+        <!-- 注册中心实现 -->
         <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <scope>provided</scope>
+            <groupId>org.apache.zookeeper</groupId>
+            <artifactId>zookeeper</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>com.alibaba.nacos</groupId>
+            <artifactId>nacos-client</artifactId>
+            <optional>true</optional>
         </dependency>
 
         <!-- 测试相关 -->
@@ -56,4 +48,13 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
 </project> 
