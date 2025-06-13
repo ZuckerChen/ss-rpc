@@ -1,0 +1,2 @@
+jdk=com.ssrpc.serialization.jdk.JdkSerializer
+json=com.ssrpc.serialization.json.JsonSerializer 

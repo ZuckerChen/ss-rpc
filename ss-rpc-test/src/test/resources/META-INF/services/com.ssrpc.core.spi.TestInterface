@@ -1,0 +1,3 @@
+default=com.ssrpc.core.spi.impl.DefaultTestImpl
+alternative=com.ssrpc.core.spi.impl.AlternativeTestImpl
+fast=com.ssrpc.core.spi.impl.FastTestImpl 

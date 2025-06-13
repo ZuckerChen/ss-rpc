@@ -1,5 +1,6 @@
 package com.ssrpc.core.rpc;
 
+import io.netty.util.AttributeKey;
 import java.io.Serializable;
 import java.util.UUID;
 
@@ -14,6 +15,11 @@ import java.util.UUID;
 public class RpcRequest implements Serializable {
     
     private static final long serialVersionUID = 1L;
+    
+    /**
+     * Netty Channel属性键，用于标识请求类型
+     */
+    public static final AttributeKey<Boolean> ATTRIBUTE_KEY = AttributeKey.valueOf("RPC_REQUEST");
     
     /**
      * 请求ID，用于标识唯一请求

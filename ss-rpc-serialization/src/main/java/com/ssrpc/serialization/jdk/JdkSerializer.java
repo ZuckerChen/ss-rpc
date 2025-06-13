@@ -1,32 +1,23 @@
-package com.ssrpc.serialization.json;
+package com.ssrpc.serialization.jdk;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ssrpc.serialization.Serializer;
 import com.ssrpc.serialization.SerializationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.*;
+
 /**
- * JSON序列化器实现.
+ * JDK序列化器实现
  * 
- * 基于Jackson实现的JSON序列化器
+ * 基于Java原生序列化机制的序列化器
  * 
  * @author chenzhang
  * @since 1.0.0
  */
-public class JsonSerializer implements Serializer {
+public class JdkSerializer implements Serializer {
     
-    private static final Logger log = LoggerFactory.getLogger(JsonSerializer.class);
-    
-    private final ObjectMapper objectMapper;
-    
-    public JsonSerializer() {
-        this.objectMapper = new ObjectMapper();
-        // 配置ObjectMapper
-        objectMapper.findAndRegisterModules();
-        // 配置忽略未知属性，避免反序列化时因为isSuccess()、isError()等方法产生的字段导致错误
-        objectMapper.configure(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-    }
+    private static final Logger log = LoggerFactory.getLogger(JdkSerializer.class);
     
     @Override
     public byte[] serialize(Object obj) throws SerializationException {
@@ -34,11 +25,17 @@ public class JsonSerializer implements Serializer {
             return new byte[0];
         }
         
-        try {
-            byte[] result = objectMapper.writeValueAsBytes(obj);
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
+             ObjectOutputStream oos = new ObjectOutputStream(baos)) {
+            
+            oos.writeObject(obj);
+            oos.flush();
+            
+            byte[] result = baos.toByteArray();
             log.debug("Serialized object {} to {} bytes", obj.getClass().getSimpleName(), result.length);
             return result;
-        } catch (Exception e) {
+            
+        } catch (IOException e) {
             throw new SerializationException(
                 SerializationException.ErrorCodes.SERIALIZE_ERROR,
                 "Failed to serialize object: " + obj.getClass().getName(),
@@ -53,11 +50,15 @@ public class JsonSerializer implements Serializer {
             return null;
         }
         
-        try {
-            T result = objectMapper.readValue(data, clazz);
+        try (ByteArrayInputStream bais = new ByteArrayInputStream(data);
+             ObjectInputStream ois = new ObjectInputStream(bais)) {
+            
+            Object result = ois.readObject();
             log.debug("Deserialized {} bytes to object {}", data.length, clazz.getSimpleName());
-            return result;
-        } catch (Exception e) {
+            
+            return clazz.cast(result);
+            
+        } catch (IOException | ClassNotFoundException | ClassCastException e) {
             throw new SerializationException(
                 SerializationException.ErrorCodes.DESERIALIZE_ERROR,
                 "Failed to deserialize to class: " + clazz.getName(),
@@ -68,12 +69,12 @@ public class JsonSerializer implements Serializer {
     
     @Override
     public String getType() {
-        return "json";
+        return "jdk";
     }
     
     @Override
     public boolean supports(Class<?> clazz) {
-        // JSON序列化支持大部分Java对象
-        return clazz != null && !clazz.isInterface();
+        // JDK序列化要求类实现Serializable接口
+        return clazz != null && Serializable.class.isAssignableFrom(clazz);
     }
 } 
