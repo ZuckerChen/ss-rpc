@@ -8,8 +8,8 @@ import com.ssrpc.transport.api.RpcServer;
 import com.ssrpc.transport.config.NetworkConfig;
 import com.ssrpc.transport.netty.NettyClient;
 import com.ssrpc.transport.netty.NettyServer;
-import com.ssrpc.registry.DefaultServiceInvokerRegistry;
-import com.ssrpc.registry.ServiceInvokerRegistry;
+import com.ssrpc.registry.impl.DefaultServiceInvokerRegistry;
+import com.ssrpc.registry.spi.ServiceInvokerRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

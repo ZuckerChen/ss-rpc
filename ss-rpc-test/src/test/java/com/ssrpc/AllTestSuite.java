@@ -10,6 +10,12 @@ package com.ssrpc;
  * - com.ssrpc.transport.codec.spi.SerializerTest - 序列化器测试
  * - com.ssrpc.transport.codec.RpcCodecTest - RPC编解码器测试
  * - com.ssrpc.transport.codec.RpcCodecIntegrationTest - RPC编解码器集成测试
+ * - com.ssrpc.registry.memory.MemoryServiceRegistryTest - 内存服务注册测试
+ * - com.ssrpc.registry.memory.MemoryServiceDiscoveryTest - 内存服务发现测试
+ * - com.ssrpc.registry.impl.DefaultServiceInvokerRegistryTest - 默认服务调用器注册测试
+ * - com.ssrpc.registry.factory.RegistryFactoryTest - 注册中心工厂测试
+ * - com.ssrpc.registry.factory.RegistryManagerTest - 注册中心管理器测试
+ * - com.ssrpc.registry.RegistryIntegrationTest - Registry模块集成测试
  *
  * @author chenzhang
  * @since 1.0.0

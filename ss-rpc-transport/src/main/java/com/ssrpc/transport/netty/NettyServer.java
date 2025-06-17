@@ -1,6 +1,6 @@
 package com.ssrpc.transport.netty;
 
-import com.ssrpc.registry.ServiceInvokerRegistry;
+import com.ssrpc.registry.spi.ServiceInvokerRegistry;
 import com.ssrpc.transport.config.NetworkConfig;
 import com.ssrpc.transport.exception.TransportException;
 import com.ssrpc.transport.api.RpcServer;

@@ -1,6 +1,7 @@
-package com.ssrpc.registry;
+package com.ssrpc.registry.impl;
 
 import com.ssrpc.protocol.RpcInvoker;
+import com.ssrpc.registry.spi.ServiceInvokerRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

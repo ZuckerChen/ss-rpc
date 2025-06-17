@@ -1,7 +1,7 @@
 package com.ssrpc.transport.netty;
 
 import com.ssrpc.core.invoker.ServiceInvoker;
-import com.ssrpc.registry.ServiceInvokerRegistry;
+import com.ssrpc.registry.spi.ServiceInvokerRegistry;
 import com.ssrpc.core.rpc.RpcRequest;
 import com.ssrpc.core.rpc.RpcResponse;
 import io.netty.channel.ChannelHandlerContext;

@@ -1,7 +1,8 @@
-package com.ssrpc.registry;
+package com.ssrpc.registry.api;
 
 import com.ssrpc.core.spi.SPI;
 import com.ssrpc.protocol.ServiceInstance;
+import com.ssrpc.registry.exception.RegistryException;
 
 /**
  * 服务注册接口.

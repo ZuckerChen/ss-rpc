@@ -1,6 +1,8 @@
-package com.ssrpc.registry;
+package com.ssrpc.registry.impl.memory;
 
 import com.ssrpc.protocol.ServiceInstance;
+import com.ssrpc.registry.api.ServiceRegistry;
+import com.ssrpc.registry.exception.RegistryException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,6 +13,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * 内存服务注册实现.
  * 
  * 基于内存存储的服务注册实现，适用于测试和单机场景
+ * 与MemoryServiceDiscovery配合使用，支持服务变更通知
  * 
  * @author chenzhang
  * @since 1.0.0
@@ -25,6 +28,11 @@ public class MemoryServiceRegistry implements ServiceRegistry {
     private final ConcurrentHashMap<String, ServiceInstance> instances = new ConcurrentHashMap<>();
     
     /**
+     * 关联的服务发现实例
+     */
+    private MemoryServiceDiscovery serviceDiscovery;
+    
+    /**
      * 启动状态
      */
     private final AtomicBoolean started = new AtomicBoolean(false);
@@ -33,6 +41,22 @@ public class MemoryServiceRegistry implements ServiceRegistry {
      * 构造方法
      */
     public MemoryServiceRegistry() {
+        // 创建关联的服务发现实例，共享存储
+        this.serviceDiscovery = new MemoryServiceDiscovery(this.instances);
+    }
+    
+    /**
+     * 获取关联的服务发现实例
+     */
+    public MemoryServiceDiscovery getServiceDiscovery() {
+        return serviceDiscovery;
+    }
+    
+    /**
+     * 设置服务发现实例（用于测试）
+     */
+    public void setServiceDiscovery(MemoryServiceDiscovery serviceDiscovery) {
+        this.serviceDiscovery = serviceDiscovery;
     }
     
     @Override
@@ -53,15 +77,18 @@ public class MemoryServiceRegistry implements ServiceRegistry {
         
         // 检查实例是否已存在
         if (instanceExists(serviceInstance.getInstanceId())) {
-            throw new RegistryException(
-                RegistryException.ErrorCodes.INSTANCE_ALREADY_EXISTS,
-                "Service instance already exists: " + serviceInstance.getInstanceId()
-            );
+            log.warn("Service instance already exists, updating: {}", serviceInstance.getInstanceId());
+            // 允许更新已存在的实例，而不是抛出异常
         }
         
         try {
             // 添加服务实例
             instances.put(serviceInstance.getInstanceId(), serviceInstance);
+            
+            // 通知服务发现
+            if (serviceDiscovery != null) {
+                serviceDiscovery.notifyServiceRegistered(serviceInstance);
+            }
             
             log.info("Registered service instance: {} for service: {}", 
                     serviceInstance.getInstanceId(), serviceInstance.getServiceName());
@@ -92,11 +119,17 @@ public class MemoryServiceRegistry implements ServiceRegistry {
         }
         
         try {
-            boolean removed = instances.remove(serviceInstance.getInstanceId()) != null;
+            ServiceInstance removedInstance = instances.remove(serviceInstance.getInstanceId());
+            boolean removed = removedInstance != null;
             
             if (!removed) {
                 log.warn("Service instance not found for unregistration: {}", serviceInstance.getInstanceId());
             } else {
+                // 通知服务发现
+                if (serviceDiscovery != null) {
+                    serviceDiscovery.notifyServiceUnregistered(removedInstance);
+                }
+                
                 log.info("Unregistered service instance: {} for service: {}", 
                         serviceInstance.getInstanceId(), serviceInstance.getServiceName());
             }
@@ -127,6 +160,7 @@ public class MemoryServiceRegistry implements ServiceRegistry {
         }
         
         try {
+            ServiceInstance oldInstance = instances.get(serviceInstance.getInstanceId());
             boolean updated = instances.replace(serviceInstance.getInstanceId(), serviceInstance) != null;
             
             if (!updated) {
@@ -134,6 +168,11 @@ public class MemoryServiceRegistry implements ServiceRegistry {
                     RegistryException.ErrorCodes.INSTANCE_NOT_FOUND,
                     "Service instance not found for update: " + serviceInstance.getInstanceId()
                 );
+            }
+            
+            // 通知服务发现
+            if (serviceDiscovery != null && oldInstance != null) {
+                serviceDiscovery.notifyServiceUpdated(oldInstance, serviceInstance);
             }
             
             log.debug("Updated service instance: {} for service: {}", 
@@ -186,7 +225,7 @@ public class MemoryServiceRegistry implements ServiceRegistry {
             throw e;
         } catch (Exception e) {
             throw new RegistryException(
-                RegistryException.ErrorCodes.HEARTBEAT_FAILED,
+                RegistryException.ErrorCodes.UNKNOWN_ERROR,
                 "Failed to process heartbeat for service instance: " + serviceInstance.getInstanceId(),
                 e
             );
@@ -253,6 +292,11 @@ public class MemoryServiceRegistry implements ServiceRegistry {
     public void start() throws RegistryException {
         if (started.compareAndSet(false, true)) {
             try {
+                // 启动服务发现
+                if (serviceDiscovery != null) {
+                    serviceDiscovery.start();
+                }
+                
                 log.info("Memory service registry started");
             } catch (Exception e) {
                 started.set(false);
@@ -271,6 +315,11 @@ public class MemoryServiceRegistry implements ServiceRegistry {
     public void stop() throws RegistryException {
         if (started.compareAndSet(true, false)) {
             try {
+                // 停止服务发现
+                if (serviceDiscovery != null) {
+                    serviceDiscovery.stop();
+                }
+                
                 instances.clear();
                 log.info("Memory service registry stopped");
             } catch (Exception e) {

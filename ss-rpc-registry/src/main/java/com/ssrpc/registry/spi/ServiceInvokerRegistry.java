@@ -1,4 +1,4 @@
-package com.ssrpc.registry;
+package com.ssrpc.registry.spi;
 
 import com.ssrpc.protocol.RpcInvoker;
 
