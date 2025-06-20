@@ -58,6 +58,26 @@
             <artifactId>ss-rpc-invoke</artifactId>
         </dependency>
 
+        <!-- SS-RPC Spring Boot Starter -->
+        <dependency>
+            <groupId>com.ssrpc</groupId>
+            <artifactId>ss-rpc-spring-boot-starter</artifactId>
+        </dependency>
+
+        <!-- Spring Boot Test -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Spring Boot Starter -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter</artifactId>
+            <scope>test</scope>
+        </dependency>
+
         <!-- Test Dependencies -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>

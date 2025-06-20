@@ -127,6 +127,11 @@
                 <artifactId>ss-rpc-metrics</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.ssrpc</groupId>
+                <artifactId>ss-rpc-spring-boot-starter</artifactId>
+                <version>${project.version}</version>
+            </dependency>
 
             <!-- Netty网络通信 -->
             <dependency>

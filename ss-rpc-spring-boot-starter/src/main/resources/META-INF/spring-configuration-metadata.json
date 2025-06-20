@@ -1,0 +1,192 @@
+{
+  "groups": [
+    {
+      "name": "ss-rpc",
+      "type": "com.ssrpc.spring.boot.autoconfigure.RpcProperties",
+      "description": "SS-RPC configuration properties."
+    },
+    {
+      "name": "ss-rpc.server",
+      "type": "com.ssrpc.spring.boot.autoconfigure.RpcProperties$Server",
+      "sourceType": "com.ssrpc.spring.boot.autoconfigure.RpcProperties",
+      "description": "SS-RPC server configuration."
+    },
+    {
+      "name": "ss-rpc.client",
+      "type": "com.ssrpc.spring.boot.autoconfigure.RpcProperties$Client",
+      "sourceType": "com.ssrpc.spring.boot.autoconfigure.RpcProperties",
+      "description": "SS-RPC client configuration."
+    },
+    {
+      "name": "ss-rpc.registry",
+      "type": "com.ssrpc.spring.boot.autoconfigure.RpcProperties$Registry",
+      "sourceType": "com.ssrpc.spring.boot.autoconfigure.RpcProperties",
+      "description": "SS-RPC registry configuration."
+    },
+    {
+      "name": "ss-rpc.serialization",
+      "type": "com.ssrpc.spring.boot.autoconfigure.RpcProperties$Serialization",
+      "sourceType": "com.ssrpc.spring.boot.autoconfigure.RpcProperties",
+      "description": "SS-RPC serialization configuration."
+    },
+    {
+      "name": "ss-rpc.load-balance",
+      "type": "com.ssrpc.spring.boot.autoconfigure.RpcProperties$LoadBalance",
+      "sourceType": "com.ssrpc.spring.boot.autoconfigure.RpcProperties",
+      "description": "SS-RPC load balance configuration."
+    }
+  ],
+  "properties": [
+    {
+      "name": "ss-rpc.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Whether to enable SS-RPC.",
+      "defaultValue": true
+    },
+    {
+      "name": "ss-rpc.server.port",
+      "type": "java.lang.Integer",
+      "description": "SS-RPC server port.",
+      "defaultValue": 9999
+    },
+    {
+      "name": "ss-rpc.server.host",
+      "type": "java.lang.String",
+      "description": "SS-RPC server host.",
+      "defaultValue": "localhost"
+    },
+    {
+      "name": "ss-rpc.server.worker-threads",
+      "type": "java.lang.Integer",
+      "description": "Number of worker threads for SS-RPC server.",
+      "defaultValue": "Runtime.getRuntime().availableProcessors() * 2"
+    },
+    {
+      "name": "ss-rpc.server.boss-threads",
+      "type": "java.lang.Integer",
+      "description": "Number of boss threads for SS-RPC server.",
+      "defaultValue": 1
+    },
+    {
+      "name": "ss-rpc.server.connect-timeout",
+      "type": "java.lang.Integer",
+      "description": "Connection timeout in milliseconds for SS-RPC server.",
+      "defaultValue": 5000
+    },
+    {
+      "name": "ss-rpc.client.connect-timeout",
+      "type": "java.lang.Integer",
+      "description": "Connection timeout in milliseconds for SS-RPC client.",
+      "defaultValue": 5000
+    },
+    {
+      "name": "ss-rpc.client.request-timeout",
+      "type": "java.lang.Integer",
+      "description": "Request timeout in milliseconds for SS-RPC client.",
+      "defaultValue": 10000
+    },
+    {
+      "name": "ss-rpc.client.retry-times",
+      "type": "java.lang.Integer",
+      "description": "Number of retry times for SS-RPC client.",
+      "defaultValue": 3
+    },
+    {
+      "name": "ss-rpc.registry.type",
+      "type": "java.lang.String",
+      "description": "Type of SS-RPC registry.",
+      "defaultValue": "memory"
+    },
+    {
+      "name": "ss-rpc.registry.address",
+      "type": "java.lang.String",
+      "description": "Address of SS-RPC registry.",
+      "defaultValue": ""
+    },
+    {
+      "name": "ss-rpc.registry.connect-timeout",
+      "type": "java.lang.Integer",
+      "description": "Connection timeout in milliseconds for SS-RPC registry.",
+      "defaultValue": 5000
+    },
+    {
+      "name": "ss-rpc.registry.session-timeout",
+      "type": "java.lang.Integer",
+      "description": "Session timeout in milliseconds for SS-RPC registry.",
+      "defaultValue": 30000
+    },
+    {
+      "name": "ss-rpc.serialization.type",
+      "type": "java.lang.String",
+      "description": "Type of SS-RPC serialization.",
+      "defaultValue": "json"
+    },
+    {
+      "name": "ss-rpc.load-balance.algorithm",
+      "type": "java.lang.String",
+      "description": "Load balance algorithm for SS-RPC.",
+      "defaultValue": "round_robin"
+    }
+  ],
+  "hints": [
+    {
+      "name": "ss-rpc.registry.type",
+      "values": [
+        {
+          "value": "memory",
+          "description": "In-memory registry for development and testing."
+        },
+        {
+          "value": "zookeeper",
+          "description": "ZooKeeper registry for production use."
+        },
+        {
+          "value": "nacos",
+          "description": "Nacos registry for production use."
+        }
+      ]
+    },
+    {
+      "name": "ss-rpc.serialization.type",
+      "values": [
+        {
+          "value": "json",
+          "description": "JSON serialization using Jackson."
+        },
+        {
+          "value": "jdk",
+          "description": "JDK native serialization."
+        },
+        {
+          "value": "kryo",
+          "description": "Kryo serialization (high performance)."
+        },
+        {
+          "value": "protobuf",
+          "description": "Protocol Buffers serialization."
+        }
+      ]
+    },
+    {
+      "name": "ss-rpc.load-balance.algorithm",
+      "values": [
+        {
+          "value": "round_robin",
+          "description": "Round robin load balancing."
+        },
+        {
+          "value": "random",
+          "description": "Random load balancing."
+        },
+        {
+          "value": "weighted_round_robin",
+          "description": "Weighted round robin load balancing."
+        },
+        {
+          "value": "least_connections",
+          "description": "Least connections load balancing."
+        }
+      ]
+    }
+  ]
+} 

@@ -37,6 +37,10 @@
             <groupId>com.ssrpc</groupId>
             <artifactId>ss-rpc-loadbalance</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.ssrpc</groupId>
+            <artifactId>ss-rpc-transport</artifactId>
+        </dependency>
 
         <!-- Spring Boot相关 -->
         <dependency>
